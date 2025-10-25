@@ -6,23 +6,171 @@
     <title>渔用水质自动采样/检测仪控制面板</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .status { background: #e8f5e8; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        .data { background: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        .controls { margin: 20px 0; }
-        button { background: #4CAF50; color: white; border: none; padding: 10px 15px; margin: 5px; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #45a049; }
-        button:disabled { background: #cccccc; cursor: not-allowed; }
-        .config-section { background: #fff3cd; padding: 15px; border-radius: 5px; margin: 10px 0; }
-        input { padding: 5px; margin: 5px; width: 100px; }
-        .log { background: #333; color: #0f0; padding: 10px; border-radius: 5px; height: 200px; overflow-y: scroll; font-family: monospace; }
-        .connection-info { background: #ffebee; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 15px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .header { 
+            text-align: center; 
+            padding: 8px 0; 
+            margin-bottom: 15px; 
+            border-bottom: 2px solid #4CAF50; 
+        }
+        .header h1 { 
+            margin: 0; 
+            font-size: 1.5em; 
+            color: #2c3e50; 
+        }
+        .status { 
+            background: #e8f5e8; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin-bottom: 15px; 
+            min-height: 60px; 
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        .status-item {
+            padding: 3px 0;
+        }
+        .data { 
+            background: #e3f2fd; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin-bottom: 15px; 
+            min-height: 80px; 
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .data-item {
+            text-align: center;
+            padding: 5px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 4px;
+        }
+        .data-label {
+            font-weight: bold;
+            font-size: 0.85em;
+            color: #555;
+        }
+        .data-value {
+            font-size: 1em;
+            color: #2c3e50;
+        }
+        .controls { 
+            margin: 15px 0; 
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .control-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .measurement-status {
+            padding: 5px 10px;
+            background: #fff3cd;
+            border-radius: 4px;
+            font-size: 0.9em;
+            min-height: 20px;
+        }
+        button { 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 0.9em;
+        }
+        button:hover { 
+            background: #45a049; 
+        }
+        button:disabled { 
+            background: #cccccc; 
+            cursor: not-allowed; 
+        }
+        .save-btn {
+            background: #2196F3;
+        }
+        .save-btn:hover {
+            background: #1976D2;
+        }
+        .config-section { 
+            background: #fff3cd; 
+            padding: 12px; 
+            border-radius: 5px; 
+            margin: 10px 0; 
+        }
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .config-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .config-item label {
+            font-size: 0.9em;
+            min-width: 40px;
+        }
+        input { 
+            padding: 4px; 
+            width: 70px; 
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .unit {
+            font-size: 0.8em;
+            color: #666;
+            min-width: 40px;
+        }
+        .log { 
+            background: #333; 
+            color: #0f0; 
+            padding: 10px; 
+            border-radius: 5px; 
+            height: 150px; 
+            overflow-y: scroll; 
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        .connection-info { 
+            background: #ffebee; 
+            padding: 8px; 
+            border-radius: 5px; 
+            margin-bottom: 10px; 
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🐟 渔用水质自动采样/检测仪控制面板</h1>
+        <div class="header">
+            <h1>🐟 渔用水质自动采样/检测仪控制面板</h1>
+        </div>
         
         <div class="connection-info">
             <strong>连接信息:</strong> 
@@ -32,33 +180,70 @@
         <div class="status">
             <h3>连接状态</h3>
             <div id="connectionStatus">🔴 未连接</div>
-            <div id="deviceStatus">等待设备数据...</div>
+            <div class="status-grid" id="deviceStatus">
+                <div class="status-item">等待设备数据...</div>
+            </div>
         </div>
 
         <div class="data">
             <h3>测量数据</h3>
-            <div id="measurementData">暂无数据</div>
+            <div class="data-grid" id="measurementData">
+                <div class="data-item">暂无数据</div>
+            </div>
+            <button class="save-btn" onclick="saveMeasurementData()" style="display:none;" id="saveButton">Save 保存数据</button>
         </div>
 
         <div class="controls">
             <h3>设备控制</h3>
-            <button onclick="sendCommand('start_measurement')">开始测量</button>
-            <button onclick="sendCommand('get_status')">获取状态</button>
-            <button onclick="sendCommand('wash')">清洗设备</button>
-            <button onclick="sendCommand('reboot')" style="background: #f44336;">重启设备</button>
+            <div class="control-buttons">
+                <button onclick="startMeasurement()" id="startButton">开始测量</button>
+                <button onclick="sendCommand('get_status')">获取状态</button>
+                <button onclick="sendCommand('wash')">清洗设备</button>
+                <button onclick="sendCommand('reboot')" style="background: #f44336;">重启设备</button>
+            </div>
+            <div class="measurement-status" id="measurementStatus">
+                <!-- 测量状态将在这里显示 -->
+            </div>
         </div>
 
         <div class="config-section">
             <h3>配置参数</h3>
-            <div>
-                <label>Cs0: <input type="number" id="Cs0" step="0.001" value="0.900"></label>
-                <label>Vx: <input type="number" id="Vx" step="0.01" value="5.00"></label>
-                <label>Vr: <input type="number" id="Vr" step="0.01" value="0.20"></label>
-                <br>
-                <label>Vs0: <input type="number" id="Vs0" step="0.01" value="5.00"></label>
-                <label>DD: <input type="number" id="DD" value="15"></label>
-                <label>DD1: <input type="number" id="DD1" value="5"></label>
-                <label>DD2: <input type="number" id="DD2" value="5"></label>
+            <div class="config-grid">
+                <div class="config-item">
+                    <label>Cs0:</label>
+                    <input type="number" id="Cs0" step="0.001" value="0.900">
+                    <span class="unit">(mg/L)</span>
+                </div>
+                <div class="config-item">
+                    <label>Vx:</label>
+                    <input type="number" id="Vx" step="0.01" value="5.00">
+                    <span class="unit">(mL)</span>
+                </div>
+                <div class="config-item">
+                    <label>Vr:</label>
+                    <input type="number" id="Vr" step="0.01" value="0.20">
+                    <span class="unit">(mL)</span>
+                </div>
+                <div class="config-item">
+                    <label>Vs0:</label>
+                    <input type="number" id="Vs0" step="0.01" value="5.00">
+                    <span class="unit">(mL)</span>
+                </div>
+                <div class="config-item">
+                    <label>DD:</label>
+                    <input type="number" id="DD" value="15">
+                    <span class="unit">(滴)</span>
+                </div>
+                <div class="config-item">
+                    <label>DD1:</label>
+                    <input type="number" id="DD1" value="5">
+                    <span class="unit">(滴)</span>
+                </div>
+                <div class="config-item">
+                    <label>DD2:</label>
+                    <input type="number" id="DD2" value="5">
+                    <span class="unit">(滴)</span>
+                </div>
             </div>
             <button onclick="updateConfig()">更新配置</button>
         </div>
@@ -90,6 +275,8 @@
                 this.client = null;
                 this.connected = false;
                 this.deviceOnline = false;
+                this.isMeasuring = false;
+                this.currentMeasurementData = null;
             }
 
             connect() {
@@ -142,7 +329,10 @@
                                 this.deviceOnline = true;
                                 this.updateDeviceStatus(payload);
                             } else if (topic === this.topics.data) {
+                                this.currentMeasurementData = payload;
                                 this.updateMeasurementData(payload);
+                                // 测量完成，恢复按钮状态
+                                this.setMeasurementStatus(false, '测量完成');
                             } else if (topic === this.topics.alert) {
                                 this.log('🚨 收到警报: ' + JSON.stringify(payload));
                             }
@@ -198,6 +388,40 @@
                 }
             }
 
+            startMeasurement() {
+                if (this.isMeasuring) {
+                    this.log('⚠️ 测量正在进行中，请等待完成');
+                    return false;
+                }
+                
+                this.setMeasurementStatus(true, '测量进行中');
+                return this.sendCommand('start_measurement');
+            }
+
+            setMeasurementStatus(measuring, statusText) {
+                this.isMeasuring = measuring;
+                const startButton = document.getElementById('startButton');
+                const statusElement = document.getElementById('measurementStatus');
+                
+                if (measuring) {
+                    startButton.disabled = true;
+                    startButton.style.backgroundColor = '#cccccc';
+                    statusElement.innerHTML = `🟡 ${statusText}`;
+                    statusElement.style.background = '#fff3cd';
+                } else {
+                    startButton.disabled = false;
+                    startButton.style.backgroundColor = '';
+                    statusElement.innerHTML = `🟢 ${statusText}`;
+                    statusElement.style.background = '#e8f5e8';
+                    
+                    // 5秒后清除状态
+                    setTimeout(() => {
+                        statusElement.innerHTML = '';
+                        statusElement.style.background = '';
+                    }, 5000);
+                }
+            }
+
             updateConnectionStatus() {
                 const statusElement = document.getElementById('connectionStatus');
                 if (this.connected) {
@@ -215,28 +439,52 @@
             }
 
             updateDeviceStatus(statusData) {
-                let html = `
-                    <div><strong>设备ID:</strong> ${statusData.device_id || 'N/A'}</div>
-                    <div><strong>状态:</strong> ${statusData.status || 'N/A'}</div>
-                    <div><strong>WiFi:</strong> ${statusData.wifi_status || 'N/A'}</div>
-                    <div><strong>MQTT:</strong> ${statusData.mqtt_status || 'N/A'}</div>
-                    <div><strong>测量次数:</strong> ${statusData.measurement_count || 'N/A'}</div>
-                    <div><strong>运行时间:</strong> ${this.formatUptime(statusData.timestamp)}</div>
-                `;
+                let html = '';
                 
+                // 基本信息
+                if (statusData.device_id) {
+                    html += `<div class="status-item"><strong>设备ID:</strong> ${statusData.device_id}</div>`;
+                }
+                if (statusData.status) {
+                    html += `<div class="status-item"><strong>状态:</strong> ${statusData.status}</div>`;
+                }
+                if (statusData.wifi_status) {
+                    html += `<div class="status-item"><strong>WiFi:</strong> ${statusData.wifi_status}</div>`;
+                }
+                if (statusData.mqtt_status) {
+                    html += `<div class="status-item"><strong>MQTT:</strong> ${statusData.mqtt_status}</div>`;
+                }
+                if (statusData.measurement_count !== undefined) {
+                    html += `<div class="status-item"><strong>测量次数:</strong> ${statusData.measurement_count}</div>`;
+                }
+                if (statusData.timestamp) {
+                    html += `<div class="status-item"><strong>运行时间:</strong> ${this.formatUptime(statusData.timestamp)}</div>`;
+                }
+                
+                // 配置参数显示在一行
                 if (statusData.config) {
-                    html += '<div><strong>配置参数:</strong></div>';
-                    html += `<div>Cs0: ${statusData.config.Cs0 || 'N/A'}, Vx: ${statusData.config.Vx || 'N/A'}, Vr: ${statusData.config.Vr || 'N/A'}</div>`;
-                    html += `<div>Vs0: ${statusData.config.Vs0 || 'N/A'}, DD: ${statusData.config.DD || 'N/A'}, DD1: ${statusData.config.DD1 || 'N/A'}, DD2: ${statusData.config.DD2 || 'N/A'}</div>`;
+                    const config = statusData.config;
+                    let configText = '';
+                    if (config.Cs0) configText += `Cs0: ${config.Cs0}, `;
+                    if (config.Vx) configText += `Vx: ${config.Vx}, `;
+                    if (config.Vr) configText += `Vr: ${config.Vr}, `;
+                    if (config.Vs0) configText += `Vs0: ${config.Vs0}, `;
+                    if (config.DD) configText += `DD: ${config.DD}, `;
+                    if (config.DD1) configText += `DD1: ${config.DD1}, `;
+                    if (config.DD2) configText += `DD2: ${config.DD2}`;
+                    
+                    // 去除末尾的逗号
+                    configText = configText.replace(/, $/, '');
+                    html += `<div class="status-item"><strong>配置:</strong> ${configText}</div>`;
                     
                     // 更新表单中的值
-                    if (statusData.config.Cs0) document.getElementById('Cs0').value = statusData.config.Cs0;
-                    if (statusData.config.Vx) document.getElementById('Vx').value = statusData.config.Vx;
-                    if (statusData.config.Vr) document.getElementById('Vr').value = statusData.config.Vr;
-                    if (statusData.config.Vs0) document.getElementById('Vs0').value = statusData.config.Vs0;
-                    if (statusData.config.DD) document.getElementById('DD').value = statusData.config.DD;
-                    if (statusData.config.DD1) document.getElementById('DD1').value = statusData.config.DD1;
-                    if (statusData.config.DD2) document.getElementById('DD2').value = statusData.config.DD2;
+                    if (config.Cs0) document.getElementById('Cs0').value = config.Cs0;
+                    if (config.Vx) document.getElementById('Vx').value = config.Vx;
+                    if (config.Vr) document.getElementById('Vr').value = config.Vr;
+                    if (config.Vs0) document.getElementById('Vs0').value = config.Vs0;
+                    if (config.DD) document.getElementById('DD').value = config.DD;
+                    if (config.DD1) document.getElementById('DD1').value = config.DD1;
+                    if (config.DD2) document.getElementById('DD2').value = config.DD2;
                 }
                 
                 document.getElementById('deviceStatus').innerHTML = html;
@@ -244,17 +492,94 @@
             }
 
             updateMeasurementData(data) {
-                let html = `
-                    <div><strong>设备ID:</strong> ${data.device_id || 'N/A'}</div>
-                    <div><strong>测量次数:</strong> ${data.measurement_count || 'N/A'}</div>
-                    <div><strong>纯水电压:</strong> ${data.mV0 || 'N/A'}</div>
-                    <div><strong>空白吸光度:</strong> ${data.Ab ? data.Ab.toFixed(6) : 'N/A'}</div>
-                    <div><strong>标样吸光度:</strong> ${data.As0 ? data.As0.toFixed(6) : 'N/A'}</div>
-                    <div><strong>样品吸光度:</strong> ${data.Ax ? data.Ax.toFixed(6) : 'N/A'}</div>
-                    <div><strong>样品浓度:</strong> ${data.Cx ? data.Cx.toFixed(6) : 'N/A'}</div>
-                `;
+                const saveButton = document.getElementById('saveButton');
+                
+                if (!data || Object.keys(data).length === 0) {
+                    document.getElementById('measurementData').innerHTML = '<div class="data-item">暂无数据</div>';
+                    saveButton.style.display = 'none';
+                    return;
+                }
+
+                let html = '';
+                
+                if (data.mV0 !== undefined) {
+                    html += `
+                        <div class="data-item">
+                            <div class="data-label">纯水电压</div>
+                            <div class="data-value">${data.mV0}</div>
+                        </div>
+                    `;
+                }
+                
+                if (data.Ab !== undefined) {
+                    html += `
+                        <div class="data-item">
+                            <div class="data-label">空白吸光度</div>
+                            <div class="data-value">${data.Ab.toFixed(6)}</div>
+                        </div>
+                    `;
+                }
+                
+                if (data.As0 !== undefined) {
+                    html += `
+                        <div class="data-item">
+                            <div class="data-label">标样吸光度</div>
+                            <div class="data-value">${data.As0.toFixed(6)}</div>
+                        </div>
+                    `;
+                }
+                
+                if (data.Ax !== undefined) {
+                    html += `
+                        <div class="data-item">
+                            <div class="data-label">样品吸光度</div>
+                            <div class="data-value">${data.Ax.toFixed(6)}</div>
+                        </div>
+                    `;
+                }
+                
+                if (data.Cx !== undefined) {
+                    html += `
+                        <div class="data-item">
+                            <div class="data-label">样品浓度</div>
+                            <div class="data-value">${data.Cx.toFixed(6)} mg/L</div>
+                        </div>
+                    `;
+                }
                 
                 document.getElementById('measurementData').innerHTML = html;
+                saveButton.style.display = 'inline-block';
+            }
+
+            saveMeasurementData() {
+                if (!this.currentMeasurementData) {
+                    this.log('❌ 没有可保存的测量数据');
+                    return;
+                }
+
+                const data = this.currentMeasurementData;
+                let content = `水质检测数据报告\n`;
+                content += `生成时间: ${new Date().toLocaleString()}\n`;
+                content += `设备ID: ${data.device_id || 'N/A'}\n`;
+                content += `测量次数: ${data.measurement_count || 'N/A'}\n`;
+                content += `纯水电压: ${data.mV0 || 'N/A'}\n`;
+                content += `空白吸光度: ${data.Ab ? data.Ab.toFixed(6) : 'N/A'}\n`;
+                content += `标样吸光度: ${data.As0 ? data.As0.toFixed(6) : 'N/A'}\n`;
+                content += `样品吸光度: ${data.Ax ? data.Ax.toFixed(6) : 'N/A'}\n`;
+                content += `样品浓度: ${data.Cx ? data.Cx.toFixed(6) + ' mg/L' : 'N/A'}\n`;
+                content += `\n--- 结束 ---`;
+
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'data.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.log('✅ 测量数据已保存为 data.txt');
             }
 
             formatUptime(timestamp) {
@@ -302,6 +627,10 @@
             monitor.sendCommand(command);
         }
 
+        function startMeasurement() {
+            monitor.startMeasurement();
+        }
+
         function updateConfig() {
             const config = {
                 Cs0: parseFloat(document.getElementById('Cs0').value),
@@ -314,6 +643,10 @@
             };
             
             monitor.sendCommand('update_config', config);
+        }
+
+        function saveMeasurementData() {
+            monitor.saveMeasurementData();
         }
 
         // 添加手动重连功能
